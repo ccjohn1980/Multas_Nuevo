@@ -1,11 +1,11 @@
-
 package logical;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -13,11 +13,27 @@ import model.Multa;
 import model.Respuesta;
 
 public class Servicio {
+    
+    public ArrayList<String> getTiposMulta() {
+        ArrayList<String> lstTiposMultas = new ArrayList<>();
+        try {
+            Connection con = Conexion.startConeccion();
+            Statement statement = con.createStatement();
+            String query = "SELECT desc_tipo_multa FROM tipo_multa ORDER BY desc_tipo_multa";
+            ResultSet rs = statement.executeQuery(query);
+            
+            while(rs.next()) {
+                lstTiposMultas.add(rs.getString("desc_tipo_multa"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return lstTiposMultas;   
+    }
            
     public ArrayList<Multa> getMultas (){
         ArrayList<Multa> lstMultas = new ArrayList<>();
         try {
-         
          Connection con = Conexion.startConeccion();
          Statement statement = con.createStatement();
          String query = "SELECT * FROM multa ORDER BY monto DESC";
@@ -46,6 +62,7 @@ public class Servicio {
         }
         return lstMultas;
     }
+    
     public Respuesta validar(Multa multa) {
         Respuesta rpta = new Respuesta();
         rpta.setCodigo(0);
@@ -56,51 +73,81 @@ public class Servicio {
         }
         if(multa.getMulta().equalsIgnoreCase("Pico placa") && multa.getMonto()<  130 | multa.getMonto()> 330) {
             rpta.setCodigo(2);
-            rpta.setMsj("La multa para pico y placa tiene que ser de 130 a 330");
+            rpta.setMsj("La multa para pico y placa tiene que ser de 130 a listo ya 330");
             return rpta;
         }
         
         if(multa.getMulta().equalsIgnoreCase("Alta Velocidad")&& multa.getMonto() < 400 | multa.getMonto() >570) {
-            rpta.setCodigo(2);
+            rpta.setCodigo(3);
             rpta.setMsj("La multa para Alta Velocidad tiene que ser de 400 a 570");
             return rpta;
         }
         if(multa.getMulta().equalsIgnoreCase("Luz Roja")&& multa.getMonto()< 130 | multa.getMonto() >250) {
-            rpta.setCodigo(2);
+            rpta.setCodigo(4);
             rpta.setMsj("La multa para Luz Roja tiene que ser de 130 a 250");
             return rpta;
         }
         if(multa.getMulta().equalsIgnoreCase("Mal estacionado")&& multa.getMonto() <100 | multa.getMonto() >190) {
-            rpta.setCodigo(2);
-            rpta.setMsj("La multa para Mal estacionado tiene que ser de 100 a 1900");
+            rpta.setCodigo(5);
+            rpta.setMsj("La multa para Mal estacionado tiene que ser de 100 a 190");
             return rpta;
         }
         
         if(multa.getMulta().equalsIgnoreCase("Alta Velocidad")&& multa.getPunto()<10 | multa.getPunto()>30) {
-            rpta.setCodigo(2);
+            rpta.setCodigo(6);
             rpta.setMsj("Los Puntos deben ser min 10 - max 30");
             return rpta;
         }
         
         if(multa.getMulta().equalsIgnoreCase("Luz Roja")&& multa.getPunto()<3 | multa.getPunto()>14) {
-            rpta.setCodigo(2);
+            rpta.setCodigo(7);
             rpta.setMsj("Los Puntos deben ser min 3  - max 14");
             return rpta;
         }
         if(multa.getMulta().equalsIgnoreCase("Mal estacionado")&& multa.getPunto()<15 | multa.getPunto()>30) {
-            rpta.setCodigo(2);
+            rpta.setCodigo(8);
             rpta.setMsj("Los Puntos deben ser min 15 - max 30");
             return rpta;
         }
         if(multa.getMulta().equalsIgnoreCase("Pico placa")&& multa.getPunto()<13 | multa.getPunto()>20) {
-            rpta.setCodigo(2);
+            rpta.setCodigo(9);
             rpta.setMsj("Los Puntos deben ser min 13 - max 20");
             return rpta;
         }
         
         return rpta;
     }
-    
+   public Respuesta insertarMultaProcedure(Multa multa) {
+        Respuesta rpta = new Respuesta();
+        try {
+            Connection con = Conexion.startConeccion();
+            String sql = "call insertar_multa(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            CallableStatement callableSt = con.prepareCall(sql);
+            // PARAMETROS DE ENTRADA (IN)
+            callableSt.setString(1, multa.getDni());
+            callableSt.setDate(2, new java.sql.Date(multa.getFecha().getTime()));
+            callableSt.setInt(3, multa.getPunto());
+            callableSt.setDouble(4, multa.getMonto());
+            callableSt.setString(5, multa.getCorreo());
+            callableSt.setString(6, multa.getMulta());
+            // PARAMETROS DE SALIDA (OUT)
+            callableSt.registerOutParameter(7, Types.INTEGER);
+            callableSt.registerOutParameter(8, Types.VARCHAR);
+            callableSt.registerOutParameter(9, Types.INTEGER);
+            //Call Stored Procedure
+            callableSt.executeUpdate(); // MANDA EL QUERY A BD
+            rpta.setCodigo(callableSt.getInt(7));
+            rpta.setMsj(callableSt.getString(8));
+            rpta.setIdGenerado(callableSt.getInt(9));
+            return rpta;
+        } catch (Exception e) {
+            e.printStackTrace();
+            rpta.setCodigo(-1);
+            rpta.setMsj("Hubo un error desconocido");
+            rpta.setIdGenerado(-1);
+            return rpta;
+        }
+    }
       
    public Respuesta insertarMulta(Multa multa) {
        Respuesta rpta = new  Respuesta (); 
@@ -138,8 +185,18 @@ public class Servicio {
                 multa.setMonto(multa.getMonto() - (multa.getMonto() * 0.1) ); // incrementos
             } else if(cantidadPuntos + multa.getPunto() >= 80) {
                 multa.setMonto(multa.getMonto() - (multa.getMonto() * 0.2) ); // incrementos
-            } else{ //DESCJUENTO OJO CON ESTO
-                
+            } else{ //DESCUENTO OJO CON ESTO
+                int arrCantMultUltMeses[] = getCantidadMultasUltMesByDNI(multa.getDni());
+                if(arrCantMultUltMeses == null) {
+                    rpta.setCodigo(4);
+                    rpta.setMsj("Hubo un error al calcular los puntos.");
+                    return rpta;
+                }
+                if(arrCantMultUltMeses[1] == 0) { // 0 = cant multas ult mes //// 1 = cant multas ult 2 meses
+                    multa.setMonto(multa.getMonto() - (multa.getMonto() * 0.15) );
+                } else if(arrCantMultUltMeses[0] == 0) {
+                    multa.setMonto(multa.getMonto() - (multa.getMonto() * 0.05) );
+                }
             }
             Connection con = Conexion.startConeccion();
             String query = "INSERT INTO `sat`.`multa` (`dni`, `tipo_multa`, `monto`, `correo`, `punto`, `fec_regi`) VALUES (?, ?, ?, ?, ?, ?)";

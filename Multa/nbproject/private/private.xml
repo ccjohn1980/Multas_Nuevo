@@ -3,12 +3,20 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/Muneca/Desktop/SAT/Multa/src/Reportes/ReporteMultas.jrxml</file>
-            <file>file:/C:/Users/Muneca/Desktop/SAT/Multa/src/logical/Conexion.java</file>
-            <file>file:/C:/Users/Muneca/Desktop/SAT/Multa/src/model/Respuesta.java</file>
-            <file>file:/C:/Users/Muneca/Desktop/SAT/Multa/src/logical/Servicio.java</file>
-            <file>file:/C:/Users/Muneca/Desktop/SAT/Multa/src/view/Registro.java</file>
-            <file>file:/C:/Users/Muneca/Desktop/SAT/Multa/src/model/Multa.java</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/Reportes/ReporteDetalleAltaVelocidad.jrxml</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/logical/Conexion.java</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/Reportes/ReporteExistentes.jrxml</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/Reportes/ReporteMultas.jrxml</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/recurces/insertar_multa.sql</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/view/Principal.java</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/Reportes/ReportePorDNI.jrxml</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/Reportes/ReporteDetalleMalEstacionado.jrxml</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/view/Registro.java</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/view/Borrados.java</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/Reportes/ReporteDetalleLuzRoja.jrxml</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/Reportes/ReporteDetallePicoPlaca.jrxml</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/logical/Servicio.java</file>
+            <file>file:/C:/Users/Muneca/Desktop/Nuevo/SAT/Multa/src/logical/ReglasNegocio.java</file>
         </group>
     </open-files>
 </project-private>

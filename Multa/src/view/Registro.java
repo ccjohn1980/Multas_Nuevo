@@ -9,6 +9,14 @@ package view;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.event.DocumentEvent;
@@ -16,7 +24,9 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 import logical.Conexion;
+import logical.ReglasNegocio;
 import logical.Servicio;
 import model.Multa;
 import model.Respuesta;
@@ -30,9 +40,11 @@ import net.sf.jasperreports.view.JasperViewer;
  *
  * @author Muneca
  */
-public class Registro extends javax.swing.JFrame {
+public class Registro extends javax.swing.JFrame implements Observer {
     
     ArrayList<Multa> lstMultas = new ArrayList<>();
+    ArrayList<Multa> lstMultasBorradas = new ArrayList<>();
+    ArrayList<String> lstTipoMultas = new ArrayList<>();
     /**
      * Creates new form Registro
      */
@@ -41,13 +53,15 @@ public class Registro extends javax.swing.JFrame {
         initComponents2();
         Servicio servicio = new Servicio ();
         lstMultas = servicio.getMultas();
+        lstTipoMultas = servicio.getTiposMulta();
         if (lstMultas == null){
             System.err.print("La lista es null");
         }else {
             System.err.print("LISTA: "+lstMultas.size());
         }
 
-        llenarTabla();
+        llenarTabla(lstMultas);
+        llenarComboTipoMulta (lstTipoMultas);
     }
 
     /**
@@ -78,6 +92,9 @@ public class Registro extends javax.swing.JFrame {
         lblDniError = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         txtFecha = new javax.swing.JFormattedTextField();
+        txtBuscar = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        btnBorrados = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -88,10 +105,15 @@ public class Registro extends javax.swing.JFrame {
                 txtDNIActionPerformed(evt);
             }
         });
+        txtDNI.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtDNIKeyTyped(evt);
+            }
+        });
 
         jLabel2.setText("Tipo");
 
-        cboTipos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { ":::Selec. Multa:::", "Alta velocidad", "Luz roja", "Mal estacionado", "Pico placa" }));
+        cboTipos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "  :::Selec. Multa:::" }));
         cboTipos.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboTiposActionPerformed(evt);
@@ -105,9 +127,19 @@ public class Registro extends javax.swing.JFrame {
                 txtMontoActionPerformed(evt);
             }
         });
+        txtMonto.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtMontoKeyTyped(evt);
+            }
+        });
 
         jLabel4.setText("Correo");
 
+        txtCorreo.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtCorreoFocusLost(evt);
+            }
+        });
         txtCorreo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtCorreoActionPerformed(evt);
@@ -146,6 +178,11 @@ public class Registro extends javax.swing.JFrame {
                 txtPuntoActionPerformed(evt);
             }
         });
+        txtPunto.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtPuntoKeyTyped(evt);
+            }
+        });
 
         btnRefrescar.setText("Refrescar");
         btnRefrescar.addActionListener(new java.awt.event.ActionListener() {
@@ -161,105 +198,150 @@ public class Registro extends javax.swing.JFrame {
             }
         });
 
+        lblDniError.setFont(new java.awt.Font("Tahoma", 1, 8)); // NOI18N
+        lblDniError.setForeground(new java.awt.Color(255, 51, 0));
+
         jLabel7.setText("Fecha");
+
+        txtFecha.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtFechaFocusLost(evt);
+            }
+        });
+
+        jLabel8.setText("Busqueda Directa");
+
+        btnBorrados.setText("Borrados");
+        btnBorrados.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBorradosActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(107, 107, 107)
+                .addGap(87, 87, 87)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 503, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(jLabel3)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtMonto, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(45, 45, 45)
+                                .addComponent(jLabel6))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel5)
+                                .addGap(25, 25, 25)
+                                .addComponent(txtPunto, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 503, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addGap(23, 23, 23)
+                        .addComponent(txtBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btnBorrar)
+                        .addGap(39, 39, 39)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(cboTipos, 0, 124, Short.MAX_VALUE)
+                            .addComponent(txtFecha, javax.swing.GroupLayout.Alignment.TRAILING)))
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(lblDniError, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 286, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addComponent(btnRegistrar)
-                                .addGap(118, 118, 118)
-                                .addComponent(btnBorrar)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(jLabel1)
-                                                .addGap(27, 27, 27)
-                                                .addComponent(jLabel6))
-                                            .addComponent(jLabel3))
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(lblDniError, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(txtMonto, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addComponent(txtDNI)))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel5)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(txtPunto, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel2)
-                                    .addComponent(jLabel4)
-                                    .addComponent(jLabel7))))
-                        .addGap(35, 35, 35)
+                                .addGap(56, 56, 56)
+                                .addComponent(btnBorrados)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(txtCorreo)
-                                .addComponent(cboTipos, 0, 124, Short.MAX_VALUE)
-                                .addComponent(txtFecha, javax.swing.GroupLayout.Alignment.TRAILING))
-                            .addComponent(btnRefrescar, javax.swing.GroupLayout.Alignment.TRAILING))))
-                .addContainerGap(53, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnRefrescar))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(93, 93, 93)
+                                .addComponent(txtCorreo))))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addGap(34, 34, 34)
+                        .addComponent(txtDNI, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel7)
+                            .addComponent(jLabel4))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap(73, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(37, 37, 37)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabel1)
-                                    .addComponent(jLabel2)
-                                    .addComponent(cboTipos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(1, 1, 1))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(txtDNI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                        .addComponent(jLabel6)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(3, 3, 3)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabel4)
-                                    .addComponent(txtCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel6)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblDniError, javax.swing.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE))))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel3)
-                        .addComponent(txtMonto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(txtDNI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel1)))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel2)
+                                .addComponent(cboTipos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblDniError, javax.swing.GroupLayout.PREFERRED_SIZE, 18, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4)
+                            .addComponent(txtCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtMonto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3))
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
                     .addComponent(txtFecha, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5)
                     .addComponent(txtPunto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 48, Short.MAX_VALUE)
+                .addGap(29, 29, 29)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnRefrescar)
+                    .addComponent(btnRegistrar)
                     .addComponent(btnBorrar)
-                    .addComponent(btnRegistrar))
-                .addGap(22, 22, 22)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(64, Short.MAX_VALUE))
+                    .addComponent(btnRefrescar)
+                    .addComponent(btnBorrados))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(txtBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 221, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(43, 43, 43))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+    
+    private void llenarComboTipoMulta(ArrayList<String> lstTipoMultas) {
+        DefaultComboBoxModel dml = new DefaultComboBoxModel();
+        dml.addElement("::: Selec. Multa :::");
+        for (String descTipMulta : lstTipoMultas) {
+            dml.addElement(descTipMulta);
+        }
+        cboTipos.setModel(dml);
+    }
+    
+    
     private void initComponents2() {
+        
+        
+        
         txtDNI.getDocument().addDocumentListener(new DocumentListener() {
             
             public void insertUpdate(DocumentEvent e) {
@@ -278,28 +360,42 @@ public class Registro extends javax.swing.JFrame {
 
             public void warn() {
                 String dni = txtDNI.getText();
-                btnRegistrar.setEnabled(false);
-                if(dni.length() == 0) {
-                    lblDniError.setText(null);
-                    return;
-                }
-                if(!dni.matches("[0-9]+")) {
-                    lblDniError.setText("El número de DNI es incorrecto.");
-                    return;
-                } else {
-                    lblDniError.setText(null);
-                }
-                if(dni.length() != 8) {
-                    lblDniError.setText("El número de DNI tiene que ser 8 caracteres.");
-                    return;
-                } else {
-                    lblDniError.setText(null);
-                }
-                btnRegistrar.setEnabled(true);
+                validarDNI (dni);
             }
 
             
         });
+     txtBuscar.getDocument().addDocumentListener(new DocumentListener() {
+            
+            public void insertUpdate(DocumentEvent e) {
+                 warn();//To change body of generated methods, choose Tools | Templates.
+            }
+
+           
+            public void removeUpdate(DocumentEvent e) {
+                warn();////To change body of generated methods, choose Tools | Templates.
+            }
+
+            
+            public void changedUpdate(DocumentEvent e) {
+                warn();// //To change body of generated methods, choose Tools | Templates.
+            }
+
+            public void warn() {
+                String busqueda = txtBuscar.getText();
+                if(busqueda.length() == 0) {
+                    llenarTabla (lstMultas);
+                    return;
+                }
+            Predicate<Multa> byDni = multa -> multa.getDni().contains(busqueda);
+            Predicate<Multa> byMulta = multa -> multa.getMulta().toLowerCase().contains(busqueda.toLowerCase());
+            ArrayList<Multa> listaFiltradaDNI   = (ArrayList) lstMultas.stream().filter(byDni).collect(Collectors.toList());
+            ArrayList<Multa> listaFiltradaMulta = (ArrayList) lstMultas.stream().filter(byMulta).collect(Collectors.toList());
+            listaFiltradaDNI.addAll(listaFiltradaMulta);
+            llenarTabla(listaFiltradaDNI);
+            }
+  
+        });   
     }
       
        
@@ -336,10 +432,28 @@ public class Registro extends javax.swing.JFrame {
     }//GEN-LAST:event_txtMontoActionPerformed
 
     private void txtCorreoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCorreoActionPerformed
-        // TODO add your handling code here:
+        
+// TODO add your handling code here:
     }//GEN-LAST:event_txtCorreoActionPerformed
-
+    ReglasNegocio validarDatos = new ReglasNegocio ();
+    
     private void btnRegistrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarActionPerformed
+        String sDNI;
+        String sMonto;
+        String sPunto;
+        String sMulta;
+        String sCorreo;
+        String sFecha;
+        
+        sDNI = txtDNI.getText();
+        sMonto = txtMonto.getText();
+        sPunto = txtPunto.getText();
+        sMulta = cboTipos.getSelectedItem().toString();
+        sCorreo = txtCorreo.getText();
+        sFecha = txtFecha.getText();
+        
+        validarDatos.validarDatos(sDNI, sMonto, sPunto, sMulta, sCorreo, sFecha);
+
         // TODO add your handling code here:
         try {
             String dni = txtDNI.getText();
@@ -360,9 +474,9 @@ public class Registro extends javax.swing.JFrame {
             String fecha  = txtFecha.getText();
            
            
-           Date fechaMulta = (Date) new SimpleDateFormat("dd/MM/yyyy").parse(fecha); 
+            Date fechaMulta = (Date) new SimpleDateFormat("dd/MM/yyyy").parse(fecha); 
            
-           //validarCampos();
+            //validarCampos();
             
             Double monto  = Double.parseDouble(montoTexto);
             
@@ -379,7 +493,7 @@ public class Registro extends javax.swing.JFrame {
             Servicio servicio = new Servicio();
             Respuesta rpta = new Respuesta();
             if(idMultaModif == 0) {
-                rpta = servicio.insertarMulta(objMulta);
+                rpta = servicio.insertarMultaProcedure(objMulta);
             } else {
                 objMulta.setIdMulta(idMultaModif);
                 rpta = servicio.actualizarMulta(objMulta);
@@ -400,7 +514,7 @@ public class Registro extends javax.swing.JFrame {
                     }
                 }
                 limpiarForm();
-                llenarTabla();
+                llenarTabla(lstMultas);
             }
             JOptionPane.showMessageDialog(this, rpta.getMsj());
         } catch (Exception e) {
@@ -419,8 +533,6 @@ public class Registro extends javax.swing.JFrame {
         txtDNI.setEnabled(true);
     }
 
-
-
     private void txtPuntoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPuntoActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtPuntoActionPerformed
@@ -429,7 +541,7 @@ public class Registro extends javax.swing.JFrame {
 
     Servicio servicio = new Servicio ();
     lstMultas = servicio.getMultas();
-    llenarTabla();   
+    llenarTabla(lstMultas);   
 // TODO add your handling code here:
     }//GEN-LAST:event_btnRefrescarActionPerformed
 
@@ -446,11 +558,13 @@ public class Registro extends javax.swing.JFrame {
                 for(Multa m : lstMultas) {
                     if(m.getIdMulta() == idMultaModif) {
                         lstMultas.remove(m);
+                        lstMultasBorradas.add(m);
                         break;
                     }
                 }
                 limpiarForm();
-                llenarTabla();
+                llenarTabla(lstMultas);
+                btnBorrados.setEnabled(true);
             }
             JOptionPane.showMessageDialog(this, rpta.getMsj());
         }        // TODO add your handling code here:
@@ -460,11 +574,112 @@ public class Registro extends javax.swing.JFrame {
        
             // TODO add your handling code here:
     }//GEN-LAST:event_tblMultasMousePressed
+
+    private void btnBorradosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBorradosActionPerformed
+        if (lstMultasBorradas.size ()== 0){
+            return;
+        }
+        
+        Borrados frame = new Borrados(lstMultasBorradas, n);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setVisible(true);
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnBorradosActionPerformed
+
+    private void txtDNIKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtDNIKeyTyped
     
-    private void llenarTabla (){
+        char validar =evt.getKeyChar();
+        if (Character.isLetter(validar)){
+            getToolkit().beep();
+            evt.consume();
+            JOptionPane.showMessageDialog(rootPane, "Ingresar solo números");
+        }
+        if (txtDNI.getText().length() >= 8){
+            evt.consume();
+        }
+        
+    }//GEN-LAST:event_txtDNIKeyTyped
+
+    private void txtMontoKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtMontoKeyTyped
+        char validar =evt.getKeyChar();
+        if (Character.isLetter(validar)){
+            getToolkit().beep();
+            evt.consume();
+            JOptionPane.showMessageDialog(rootPane, "Ingresar solo números");
+        }
+    }//GEN-LAST:event_txtMontoKeyTyped
+
+    private void txtPuntoKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtPuntoKeyTyped
+        char validar =evt.getKeyChar();
+        if (Character.isLetter(validar)){
+            getToolkit().beep();
+            evt.consume();
+            JOptionPane.showMessageDialog(rootPane, "Ingresar solo números");
+        }
+    }//GEN-LAST:event_txtPuntoKeyTyped
+    
+    public boolean isEmail (String correo){
+        Pattern pat = null;
+        Matcher mat = null;
+        pat = Pattern.compile("^[\\w\\-\\_\\+]+(\\.[\\w\\-\\_]+)*@([A-Za-z0-9-]+\\.)+[A-Za-z]{2,4}$");
+        mat = pat.matcher(correo);
+        if(mat.find()){
+            return true;
+        }else{
+            return false;
+        }
+        
+    }
+    
+    private void txtCorreoFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtCorreoFocusLost
+        if(!isEmail(txtCorreo.getText())){
+            JOptionPane.showMessageDialog(null, "¡Debes validar el email!", "ATENCIÓN ADMINISTRADOR", JOptionPane.WARNING_MESSAGE);
+            txtCorreo.requestFocus();
+        }
+        
+        
+    }//GEN-LAST:event_txtCorreoFocusLost
+    
+    private void txtFechaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtFechaFocusLost
+        Date sistFecha  = new  Date ();
+        
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
+        txtFecha.setText(formato.format(sistFecha));
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtFechaFocusLost
+    private void buscador(String busqueda) {
+        Predicate<Multa> byDni = multa -> multa.getDni().contains(busqueda);
+        Predicate<Multa> byMulta = multa -> multa.getMulta().toLowerCase().contains(busqueda.toLowerCase());
+        ArrayList<Multa> listaFiltradaDNI   = (ArrayList) lstMultas.stream().filter(byDni).collect(Collectors.toList());
+        ArrayList<Multa> listaFiltradaMulta = (ArrayList) lstMultas.stream().filter(byMulta).collect(Collectors.toList());
+        listaFiltradaDNI.addAll(listaFiltradaMulta);
+        llenarTabla(listaFiltradaDNI);
+    }
+    private void validarDNI (String dni){
+        btnRegistrar.setEnabled(false);
+            if(dni.length() == 0) {
+                lblDniError.setText(null);
+                return;
+            }
+            //if(!dni.matches("[0-9]+")) {
+              // lblDniError.setText("El número de DNI es incorrecto.");
+               // return;
+            // } else {
+               // lblDniError.setText(null);
+            // }
+            if(dni.length() != 8) {
+                lblDniError.setText("El número de DNI tiene que ser 8 caracteres.");
+                return;
+            } else {
+                lblDniError.setText(null);
+            }
+            btnRegistrar.setEnabled(true);
+    }
+    
+    private void llenarTabla (ArrayList<Multa> lista){
         DefaultTableModel model = new DefaultTableModel (new String []{"#", "DNI", "Multa", "Monto", "Correo", "Punto","Id"},0);
             int i = 1;
-            for (Multa m : lstMultas){
+            for (Multa m : lista){
                 model.addRow(new Object []{i, m.getDni(), m.getMulta(), m.getMonto(), m.getCorreo(), m.getPunto(), m.getIdMulta()});
                 i++;
             }
@@ -481,9 +696,28 @@ public class Registro extends javax.swing.JFrame {
             tblMultas.getSelectionModel().addListSelectionListener(lel);
             jScrollPane1.setViewportView(tblMultas);
     }
+     @Override
+    public void update(Observable o, Object arg) {
+        Multa mulRest = (Multa) arg;
+        System.err.print(mulRest.getCorreo());
+        
+        Servicio servicio = new Servicio();
+        Respuesta rpta = new Respuesta();
+        rpta = servicio.insertarMulta(mulRest);
+        mulRest.setIdMulta (rpta.getIdGenerado());
+        
+        if(rpta.getCodigo() == 0) {
+                lstMultas.add(mulRest);
+                limpiarForm();
+                llenarTabla(lstMultas);
+            }
+            JOptionPane.showMessageDialog(this, rpta.getMsj());
+    }
+    
     /**
      * @param args the command line arguments
      */
+    static Registro n = new Registro ();
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -511,12 +745,13 @@ public class Registro extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Registro().setVisible(true);
+                n.setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnBorrados;
     private javax.swing.JButton btnBorrar;
     private javax.swing.JButton btnRefrescar;
     private javax.swing.JButton btnRegistrar;
@@ -528,13 +763,18 @@ public class Registro extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblDniError;
     private javax.swing.JTable tblMultas;
+    private javax.swing.JTextField txtBuscar;
     private javax.swing.JTextField txtCorreo;
     private javax.swing.JTextField txtDNI;
     private javax.swing.JFormattedTextField txtFecha;
     private javax.swing.JTextField txtMonto;
     private javax.swing.JTextField txtPunto;
     // End of variables declaration//GEN-END:variables
+
+   
+    
 }

@@ -5,19 +5,23 @@
  */
 package view;
 
+import java.util.ArrayList;
+import javax.swing.JFrame;
 import logical.Conexion;
+import model.Multa;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.view.JasperViewer;
+import static view.Registro.n;
 
 /**
  *
  * @author Muneca
  */
 public class Principal extends javax.swing.JFrame {
-
+    ArrayList<Multa> lstMultasBorradas = new ArrayList<>();
     /**
      * Creates new form Principal
      */
@@ -37,11 +41,16 @@ public class Principal extends javax.swing.JFrame {
         escritorio = new javax.swing.JDesktopPane();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
+        RegistroMulta = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
-        jMenuItem2 = new javax.swing.JMenuItem();
-        jMenuItem3 = new javax.swing.JMenuItem();
-        jMenuItem4 = new javax.swing.JMenuItem();
+        ReporteTipoMulta = new javax.swing.JMenuItem();
+        ReporteExistentesBD = new javax.swing.JMenuItem();
+        ReporteMultaDNI = new javax.swing.JMenuItem();
+        DetalleReporte = new javax.swing.JMenu();
+        ReporteAltaVelocidad = new javax.swing.JMenuItem();
+        ReportePicoPlaca = new javax.swing.JMenuItem();
+        ReporteLuzRoja = new javax.swing.JMenuItem();
+        ReporteMalEstacionado = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -63,41 +72,77 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
-        jMenuItem1.setText("Registro Multas");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+        RegistroMulta.setText("Registro Multas");
+        RegistroMulta.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
+                RegistroMultaActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem1);
+        jMenu1.add(RegistroMulta);
 
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Reportes");
 
-        jMenuItem2.setText("Por Tipo de Multa");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+        ReporteTipoMulta.setText("Por Tipo de Multa");
+        ReporteTipoMulta.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
+                ReporteTipoMultaActionPerformed(evt);
             }
         });
-        jMenu2.add(jMenuItem2);
+        jMenu2.add(ReporteTipoMulta);
 
-        jMenuItem3.setText("Existentes en BD");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+        ReporteExistentesBD.setText("Existentes en BD");
+        ReporteExistentesBD.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
+                ReporteExistentesBDActionPerformed(evt);
             }
         });
-        jMenu2.add(jMenuItem3);
+        jMenu2.add(ReporteExistentesBD);
 
-        jMenuItem4.setText("Multa por DNI");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+        ReporteMultaDNI.setText("Multa por DNI");
+        ReporteMultaDNI.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem4ActionPerformed(evt);
+                ReporteMultaDNIActionPerformed(evt);
             }
         });
-        jMenu2.add(jMenuItem4);
+        jMenu2.add(ReporteMultaDNI);
+
+        DetalleReporte.setText("Detalle de Reportes");
+
+        ReporteAltaVelocidad.setText("Alta Velocidad");
+        ReporteAltaVelocidad.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ReporteAltaVelocidadActionPerformed(evt);
+            }
+        });
+        DetalleReporte.add(ReporteAltaVelocidad);
+
+        ReportePicoPlaca.setText("Pico Placa");
+        ReportePicoPlaca.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ReportePicoPlacaActionPerformed(evt);
+            }
+        });
+        DetalleReporte.add(ReportePicoPlaca);
+
+        ReporteLuzRoja.setText("Luz Roja");
+        ReporteLuzRoja.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ReporteLuzRojaActionPerformed(evt);
+            }
+        });
+        DetalleReporte.add(ReporteLuzRoja);
+
+        ReporteMalEstacionado.setText("Mal Estacionado");
+        ReporteMalEstacionado.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ReporteMalEstacionadoActionPerformed(evt);
+            }
+        });
+        DetalleReporte.add(ReporteMalEstacionado);
+
+        jMenu2.add(DetalleReporte);
 
         jMenuBar1.add(jMenu2);
 
@@ -121,25 +166,25 @@ public class Principal extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+    private void RegistroMultaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RegistroMultaActionPerformed
     Registro abrir = new Registro();
     abrir.setVisible(true); 
     
     
 // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
+    }//GEN-LAST:event_RegistroMultaActionPerformed
 
     private void jMenu1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu1ActionPerformed
     
 // TODO add your handling code here:
     }//GEN-LAST:event_jMenu1ActionPerformed
 
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+    private void ReporteTipoMultaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReporteTipoMultaActionPerformed
      
     try {
         JasperReport jr = (JasperReport) JRLoader.loadObject(Registro.class.getResource("../Reportes/ReporteMultas.jasper"));
         JasperPrint jp = JasperFillManager.fillReport(jr, null, Conexion.startConeccion());
-        JasperViewer jv = new JasperViewer(jp);
+        JasperViewer jv = new JasperViewer(jp,false);
         jv.show();
         } catch (Exception e) {
               // TODO add your handling code here:
@@ -147,35 +192,90 @@ public class Principal extends javax.swing.JFrame {
 
 
         // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem2ActionPerformed
+    }//GEN-LAST:event_ReporteTipoMultaActionPerformed
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+    private void ReporteExistentesBDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReporteExistentesBDActionPerformed
       
     try {
         JasperReport jr = (JasperReport) JRLoader.loadObject(Registro.class.getResource("../Reportes/ReporteExistentes.jasper"));
         JasperPrint jp = JasperFillManager.fillReport(jr, null, Conexion.startConeccion());
-        JasperViewer jv = new JasperViewer(jp);
+        JasperViewer jv = new JasperViewer(jp,false);
         jv.show();
         } catch (Exception e) {
                 // TODO add your handling code here:
     }        
 
         // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+    }//GEN-LAST:event_ReporteExistentesBDActionPerformed
 
-    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+    private void ReporteMultaDNIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReporteMultaDNIActionPerformed
          
     try {
         JasperReport jr = (JasperReport) JRLoader.loadObject(Registro.class.getResource("../Reportes/ReportePorDNI.jasper"));
         JasperPrint jp = JasperFillManager.fillReport(jr, null, Conexion.startConeccion());
-        JasperViewer jv = new JasperViewer(jp);
+        JasperViewer jv = new JasperViewer(jp,false);
         jv.show();
         } catch (Exception e) {
                 // TODO add your handling code here:
     } 
     
 // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem4ActionPerformed
+    }//GEN-LAST:event_ReporteMultaDNIActionPerformed
+
+    private void ReporteAltaVelocidadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReporteAltaVelocidadActionPerformed
+    try {
+        JasperReport jr = (JasperReport) JRLoader.loadObject(Registro.class.getResource("../Reportes/ReporteDetalleAltaVelocidad.jasper"));
+        JasperPrint jp = JasperFillManager.fillReport(jr, null, Conexion.startConeccion());
+        JasperViewer jv = new JasperViewer(jp,false);
+        jv.show();
+        } catch (Exception e) {
+              // TODO add your handling code here:
+    }    
+
+
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ReporteAltaVelocidadActionPerformed
+
+    private void ReportePicoPlacaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReportePicoPlacaActionPerformed
+    try {
+        JasperReport jr = (JasperReport) JRLoader.loadObject(Registro.class.getResource("../Reportes/ReporteDetallePicoPlaca.jasper"));
+        JasperPrint jp = JasperFillManager.fillReport(jr, null, Conexion.startConeccion());
+        JasperViewer jv = new JasperViewer(jp,false);
+        jv.show();
+        } catch (Exception e) {
+              // TODO add your handling code here:
+    }    
+        
+// TODO add your handling code here:
+    }//GEN-LAST:event_ReportePicoPlacaActionPerformed
+
+    private void ReporteLuzRojaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReporteLuzRojaActionPerformed
+
+    try {
+        JasperReport jr = (JasperReport) JRLoader.loadObject(Registro.class.getResource("../Reportes/ReporteDetalleLuzRoja.jasper"));
+        JasperPrint jp = JasperFillManager.fillReport(jr, null, Conexion.startConeccion());
+        JasperViewer jv = new JasperViewer(jp,false);
+        jv.show();
+        } catch (Exception e) {
+              // TODO add your handling code here:
+    }        
+
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ReporteLuzRojaActionPerformed
+
+    private void ReporteMalEstacionadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReporteMalEstacionadoActionPerformed
+    try {
+        JasperReport jr = (JasperReport) JRLoader.loadObject(Registro.class.getResource("../Reportes/ReporteDetalleMalEstacionado.jasper"));
+        JasperPrint jp = JasperFillManager.fillReport(jr, null, Conexion.startConeccion());
+        JasperViewer jv = new JasperViewer(jp,false);
+        jv.show();
+        } catch (Exception e) {
+              // TODO add your handling code here:
+    }        
+
+
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ReporteMalEstacionadoActionPerformed
 
     /**
      * @param args the command line arguments
@@ -213,13 +313,18 @@ public class Principal extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu DetalleReporte;
+    private javax.swing.JMenuItem RegistroMulta;
+    private javax.swing.JMenuItem ReporteAltaVelocidad;
+    private javax.swing.JMenuItem ReporteExistentesBD;
+    private javax.swing.JMenuItem ReporteLuzRoja;
+    private javax.swing.JMenuItem ReporteMalEstacionado;
+    private javax.swing.JMenuItem ReporteMultaDNI;
+    private javax.swing.JMenuItem ReportePicoPlaca;
+    private javax.swing.JMenuItem ReporteTipoMulta;
     public static javax.swing.JDesktopPane escritorio;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JMenuItem jMenuItem4;
     // End of variables declaration//GEN-END:variables
 }
